@@ -1,0 +1,7 @@
+module CX11 [system] {
+  header "x11.h"
+  link "X11"
+  link "Xrandr"
+  link "Xinerama"
+  export *
+}

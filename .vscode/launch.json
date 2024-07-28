@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:SWM}",
+            "name": "Debug swm",
+            "program": "${workspaceFolder:SWM}/.build/debug/swm",
+            "preLaunchTask": "swift: Build Debug swm"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:SWM}",
+            "name": "Release swm",
+            "program": "${workspaceFolder:SWM}/.build/release/swm",
+            "preLaunchTask": "swift: Build Release swm"
+        }
+    ]
+}
