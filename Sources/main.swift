@@ -42,3 +42,24 @@ XSelectInput(
         | Int(Button1Mask)
 )
 XSync(display, False)
+
+XSetErrorHandler { display, errorEventPointer in
+    if let errorEvent = errorEventPointer?.pointee {
+        switch (Int32(errorEvent.error_code), Int32(errorEvent.request_code)) {
+        case (BadWindow, _):
+            return 0
+        case (BadMatch, X_SetInputFocus),
+         (BadDrawable, X_PolyText8),
+         (BadDrawable, X_PolyFillRectangle),
+         (BadDrawable, X_PolySegment),
+         (BadMatch, X_ConfigureWindow),
+         (BadAccess, X_GrabButton),
+         (BadAccess, X_GrabKey),
+         (BadDrawable, X_CopyArea):
+            return 0
+        default:
+            logger.error("fatal error: request code=\(errorEvent.request_code), error code = \(errorEvent.error_code)")
+        }
+    }
+    return defaultXErrorHandler(display, errorEventPointer)
+}
