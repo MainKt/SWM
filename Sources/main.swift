@@ -142,3 +142,12 @@ XWarpPointer(
     Int32(monitors.first!.x + monitors.first!.width / 2),
     Int32(monitors.first!.y + monitors.first!.height / 2)
 )
+
+do {
+    var workspaces = (0 ..< defaultConfig.totalWorkspaces)
+        .map { strdup(String($0)) }
+    var textProp = XTextProperty()
+    Xutf8TextListToTextProperty(display, &workspaces, Int32(defaultConfig.totalWorkspaces), XUTF8StringStyle, &textProp)
+    XSetTextProperty(display, root, &textProp, netAtom[.desktopNames]!)
+    workspaces.forEach { free($0) }
+}
