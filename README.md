@@ -1,4 +1,4 @@
-# SWM
+# SWM [Work in Progress]
 A simple X11 window manager in swift 🐦
 
 ## Building
