@@ -35,7 +35,7 @@ let defaultXErrorHandler = XSetErrorHandler { _, _ in
         logger.warning("ignoring another wm check")
         return 0
     #else
-        fatalError("swm: another window manager is already running!")
+        fatalError("Another window manager is already running!")
     #endif
 }!
 
@@ -90,4 +90,15 @@ XSetInputFocus(display, noFocusWindow, Int32(RevertToPointerRoot), Time(CurrentT
 
 let netAtom = Dictionary(uniqueKeysWithValues: NetAtom.allCases.map { ($0, XInternAtom(display, $0.rawValue, False)) })
 let wmAtom = Dictionary(uniqueKeysWithValues: WMAtom.allCases.map { ($0, XInternAtom(display, $0.rawValue, False)) })
+let utf8StringAtom = XInternAtom(display, "UTF8_STRING", False)
 logger.debug("Successfully assigned atoms")
+
+var checkWindow = XCreateSimpleWindow(display, root, 0, 0, 1, 1, 0, 0, 0)
+XChangeProperty(display, checkWindow, netAtom[.wmCheck]!, XA_WINDOW, 32, PropModeReplace, &checkWindow, 1)
+XChangeProperty(display, checkWindow, netAtom[.wmName]!, utf8StringAtom, 8, PropModeReplace, "swm", 5)
+
+XChangeProperty(display, root, netAtom[.wmCheck]!, XA_WINDOW, 32, PropModeReplace, &checkWindow, 1)
+
+var netAtoms = Array(netAtom.values)
+XChangeProperty(display, root, netAtom[.supported]!, XA_ATOM, 32, PropModeReplace, &netAtoms, Int32(netAtoms.count))
+logger.debug("Successfully set initial properties")
