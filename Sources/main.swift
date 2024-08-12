@@ -151,3 +151,10 @@ do {
     XSetTextProperty(display, root, &textProp, netAtom[.desktopNames]!)
     workspaces.forEach { free($0) }
 }
+
+var running = true
+var event = XEvent()
+while running {
+    XNextEvent(display, &event)
+    logger.debug("Recieved new \(event.type) event")
+}
