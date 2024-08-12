@@ -30,7 +30,14 @@ let cursor = (
 )
 XDefineCursor(display, root, cursor.normal)
 
-let defaultXErrorHandler = XSetErrorHandler { _, _ in fatalError("swm: another window manager is already running!") }!
+let defaultXErrorHandler = XSetErrorHandler { _, _ in
+    #if DEBUG
+        logger.debug("ignoring another wm check")
+        return 0
+    #else
+fatalError("swm: another window manager is already running!")
+    #endif
+}!
 
 XSelectInput(
     display,
