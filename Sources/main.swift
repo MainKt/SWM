@@ -1,5 +1,5 @@
-import Foundation
 import CX11
+import Foundation
 import Logging
 
 let logger = Logger(label: "SWM")
@@ -32,10 +32,10 @@ XDefineCursor(display, root, cursor.normal)
 
 let defaultXErrorHandler = XSetErrorHandler { _, _ in
     #if DEBUG
-        logger.debug("ignoring another wm check")
+        logger.warning("ignoring another wm check")
         return 0
     #else
-fatalError("swm: another window manager is already running!")
+        fatalError("swm: another window manager is already running!")
     #endif
 }!
 
@@ -70,3 +70,18 @@ XSetErrorHandler { display, errorEventPointer in
     }
     return defaultXErrorHandler(display, errorEventPointer)
 }
+
+XSync(display, False)
+
+let noFocusWindow = XCreateSimpleWindow(display, root, -10, -10, 1, 1, 0, 0, 0)
+do {
+    var attributes = XSetWindowAttributes()
+    attributes.override_redirect = True
+    XChangeWindowAttributes(
+        display,
+        noFocusWindow,
+        UInt(CWOverrideRedirect),
+        &attributes
+    )
+}
+XMapWindow(display, noFocusWindow)
