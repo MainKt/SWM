@@ -84,4 +84,10 @@ do {
         &attributes
     )
 }
+
 XMapWindow(display, noFocusWindow)
+XSetInputFocus(display, noFocusWindow, Int32(RevertToPointerRoot), Time(CurrentTime))
+
+let netAtom = Dictionary(uniqueKeysWithValues: NetAtom.allCases.map { ($0, XInternAtom(display, $0.rawValue, False)) })
+let wmAtom = Dictionary(uniqueKeysWithValues: WMAtom.allCases.map { ($0, XInternAtom(display, $0.rawValue, False)) })
+logger.debug("Successfully assigned atoms")

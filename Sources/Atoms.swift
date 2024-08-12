@@ -1,0 +1,30 @@
+enum NetAtom: String, CaseIterable {
+    case supported = "_NET_SUPPORTED"
+    case numberOfDesktops = "_NET_NUMBER_OF_DESKTOPS"
+    case activeWindow = "_NET_ACTIVE_WINDOW"
+    case wmStateFullscreen = "_NET_WM_STATE_FULLSCREEN"
+    case wmMoveResize = "_NET_MOVERESIZE_WINDOW"
+    case wmCheck = "_NET_SUPPORTING_WM_CHECK"
+    case currentDesktop = "_NET_CURRENT_DESKTOP"
+    case wmState = "_NET_WM_STATE"
+    case wmName = "_NET_WM_NAME"
+    case clientList = "_NET_CLIENT_LIST"
+    case wmWindowType = "_NET_WM_WINDOW_TYPE"
+    case wmWindowTypeDock = "_NET_WM_WINDOW_TYPE_DOCK"
+    case wmWindowTypeToolbar = "_NET_WM_WINDOW_TYPE_TOOLBAR"
+    case wmWindowTypeMenu = "_NET_WM_WINDOW_TYPE_MENU"
+    case wmWindowTypeSplash = "_NET_WM_WINDOW_TYPE_SPLASH"
+    case wmWindowTypeDialog = "_NET_WM_WINDOW_TYPE_DIALOG"
+    case wmWindowTypeUtility = "_NET_WM_WINDOW_TYPE_UTILITY"
+    case wmDesktop = "_NET_WM_DESKTOP"
+    case wmFrameExtents = "_NET_FRAME_EXTENTS"
+    case desktopNames = "_NET_DESKTOP_NAMES"
+    case desktopViewport = "_NET_DESKTOP_VIEWPORT"
+    case last = "_NET_LAST"
+}
+
+enum WMAtom: String, CaseIterable {
+    case deleteWindow = "WM_DELETE_WINDOW"
+    case takeFocus = "WM_TAKE_FOCUS"
+    case protocols = "WM_PROTOCOLS"
+}
