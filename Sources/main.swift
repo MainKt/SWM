@@ -16,7 +16,8 @@ let defaultConfig = Config(
         color: (focused: 0xFFFFFF, unfocused: 0x000000)
     ),
     gap: (inner: 4, outer: 4),
-    mouseMask: UInt(Mod4Mask)
+    mouseMask: UInt(Mod4Mask),
+    totalWorkspaces: 10
 )
 
 let root = XDefaultRootWindow(display)
@@ -102,3 +103,42 @@ XChangeProperty(display, root, netAtom[.wmCheck]!, XA_WINDOW, 32, PropModeReplac
 var netAtoms = Array(netAtom.values)
 XChangeProperty(display, root, netAtom[.supported]!, XA_ATOM, 32, PropModeReplace, &netAtoms, Int32(netAtoms.count))
 logger.debug("Successfully set initial properties")
+
+XChangeProperty(display, root, netAtom[.numberOfDesktops]!, XA_CARDINAL, 32, PropModeReplace, [UInt8(defaultConfig.totalWorkspaces)], 1)
+let currentWorkspace = 0
+XChangeProperty(display, root, netAtom[.currentDesktop]!, XA_CARDINAL, 32, PropModeReplace, [UInt8(currentWorkspace)], 1)
+
+logger.debug("Setting up monitors")
+typealias Monitor = (x: Int16, y: Int16, width: Int16, height: Int16, screen: Int32)
+var monitors: [Monitor] = []
+if XineramaIsActive(display) == True {
+    var totalScreens: Int32 = 0
+    if let monitorInfo = XineramaQueryScreens(display, &totalScreens) {
+        logger.debug("Found \(totalScreens) screens active")
+
+        let monitorArray = Array(UnsafeBufferPointer(start: monitorInfo, count: Int(totalScreens)))
+            .map {
+                let monitor = Monitor(x: $0.x_org, y: $0.y_org, width: $0.width, height: $0.height, screen: $0.screen_number)
+                logger.debug("Screen \(monitor.screen) with dimensions: x=\(monitor.x) y=\(monitor.y) w=\(monitor.width) h=\(monitor.height)")
+                return monitor
+            }
+
+        monitors.append(contentsOf: monitorArray)
+        XChangeProperty(display, root, netAtom[.desktopViewport]!, XA_CARDINAL, 32, PropModeReplace, [0, 0], 2)
+    } else {
+        logger.debug("Xinerama could not query screens")
+    }
+} else {
+    logger.debug("Xinerama not active, cannot read monitors")
+}
+
+logger.debug("Successfully setup monitors")
+
+XWarpPointer(
+    display,
+    Window(None),
+    root,
+    0, 0, 0, 0,
+    Int32(monitors.first!.x + monitors.first!.width / 2),
+    Int32(monitors.first!.y + monitors.first!.height / 2)
+)
