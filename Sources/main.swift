@@ -2,7 +2,10 @@ import CX11
 import Foundation
 import Logging
 
-let logger = Logger(label: "SWM")
+var logger = Logger(label: "SWM")
+#if DEBUG
+    logger.logLevel = .debug
+#endif
 
 guard let display = XOpenDisplay(nil) else {
     fatalError("Failed to open display")
@@ -12,11 +15,11 @@ logger.debug("Successfully opened display")
 
 let defaultConfig = Config(
     border: (
-        borderWidth: 2,
+        width: 2,
         color: (focused: 0xFFFFFF, unfocused: 0x000000)
     ),
     gap: (inner: 4, outer: 4),
-    mouseMask: UInt(Mod4Mask),
+    mouse: (mouseMask: UInt32(Mod4Mask), moveButton: 1, resizeButton: 3),
     totalWorkspaces: 10
 )
 
@@ -152,9 +155,85 @@ do {
     workspaces.forEach { free($0) }
 }
 
+let eventHandler = [
+    MapRequest: { (e: XEvent) in
+        let mapRequest = e.xmaprequest
+        var attributes = XWindowAttributes()
+        guard XGetWindowAttributes(display, mapRequest.window, &attributes) == True else { return }
+        guard attributes.override_redirect == False else { return }
+
+        var propReturn: UnsafeMutablePointer<UInt8>?
+        var dummyAtom = Atom()
+        var dummyInt = Int32()
+        var dummyUInt1 = UInt(), dummyUInt2 = UInt()
+        if XGetWindowProperty(display, mapRequest.window, netAtom[.wmWindowType]!, 0, MemoryLayout<Atom>.size, False, XA_ATOM, &dummyAtom, &dummyInt, &dummyUInt1, &dummyUInt2, &propReturn) == Success {
+            if let propReturn {
+                let prop = Atom(propReturn.pointee)
+                let atoms = [
+                    netAtom[.wmWindowTypeDock]!,
+                    netAtom[.wmWindowTypeToolbar]!,
+                    netAtom[.wmWindowTypeUtility]!,
+                    netAtom[.wmWindowTypeDialog]!,
+                    netAtom[.wmWindowTypeMenu]!,
+                ]
+                if atoms.contains(prop) {
+                    logger.debug("Window is of type dock, toolbar, utility, menu or splash: not managing")
+                    logger.debug("Mapping new window, not managed")
+                    XMapWindow(display, mapRequest.window)
+                    return
+                }
+            }
+        }
+
+        var classHint = XClassHint()
+        if XGetClassHint(display, mapRequest.window, &classHint) > Success {
+            if let resClass = classHint.res_class {
+                logger.debug("Client has class \(resClass)")
+                XFree(classHint.res_class)
+            }
+            if let resName = classHint.res_name {
+                logger.debug("Client has name \(resName)")
+                XFree(classHint.res_name)
+            }
+        } else {
+            logger.debug("Could not retrieve client class name")
+        }
+
+        let client = Client(
+            window: mapRequest.window,
+            tags: 1 << 0,
+            hidden: false,
+            fullScreen: false,
+            geometry: (x: attributes.x, y: attributes.y, width: attributes.width, height: attributes.height)
+        )
+
+        XSetWindowBorder(display, client.window, defaultConfig.border.color.focused)
+        XSetWindowBorderWidth(display, client.window, defaultConfig.border.width)
+
+        XChangeProperty(display, client.window, netAtom[.wmDesktop]!, XA_CARDINAL, 32, PropModeReplace, [0], 1)
+
+        XMapWindow(display, client.window)
+
+        XSelectInput(display, client.window, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask)
+
+        XGrabButton(display, defaultConfig.mouse.moveButton, defaultConfig.mouse.mouseMask, client.window, True, UInt32(ButtonPressMask | ButtonReleaseMask | PointerMotionMask), GrabModeAsync, GrabModeAsync, Window(None), Cursor(None))
+        XGrabButton(display, defaultConfig.mouse.resizeButton, defaultConfig.mouse.mouseMask, client.window, True, UInt32(ButtonPressMask | ButtonReleaseMask | PointerMotionMask), GrabModeAsync, GrabModeAsync, Window(None), Cursor(None))
+    },
+    UnmapNotify: { (e: XEvent) in },
+    ConfigureNotify: { (e: XEvent) in },
+    ConfigureRequest: { (e: XEvent) in },
+    ClientMessage: { (e: XEvent) in },
+    ButtonPress: { (e: XEvent) in },
+    PropertyNotify: { (e: XEvent) in },
+    Expose: { (e: XEvent) in },
+    FocusIn: { (e: XEvent) in },
+    EnterNotify: { (e: XEvent) in },
+]
+
 var running = true
 var event = XEvent()
 while running {
     XNextEvent(display, &event)
     logger.debug("Recieved new \(event.type) event")
+    eventHandler[event.type]?(event)
 }
