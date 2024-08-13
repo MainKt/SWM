@@ -155,6 +155,7 @@ do {
     workspaces.forEach { free($0) }
 }
 
+var clients: [Client] = []
 let eventHandler = [
     MapRequest: { (e: XEvent) in
         let mapRequest = e.xmaprequest
@@ -206,6 +207,7 @@ let eventHandler = [
             fullScreen: false,
             geometry: (x: attributes.x, y: attributes.y, width: attributes.width, height: attributes.height)
         )
+        clients.append(client)
 
         XSetWindowBorder(display, client.window, defaultConfig.border.color.focused)
         XSetWindowBorderWidth(display, client.window, defaultConfig.border.width)
@@ -218,6 +220,8 @@ let eventHandler = [
 
         XGrabButton(display, defaultConfig.mouse.moveButton, defaultConfig.mouse.mouseMask, client.window, True, UInt32(ButtonPressMask | ButtonReleaseMask | PointerMotionMask), GrabModeAsync, GrabModeAsync, Window(None), Cursor(None))
         XGrabButton(display, defaultConfig.mouse.resizeButton, defaultConfig.mouse.mouseMask, client.window, True, UInt32(ButtonPressMask | ButtonReleaseMask | PointerMotionMask), GrabModeAsync, GrabModeAsync, Window(None), Cursor(None))
+
+        XSetInputFocus(display, client.window, Int32(RevertToPointerRoot), Time(CurrentTime))
     },
     UnmapNotify: { (e: XEvent) in },
     ConfigureNotify: { (e: XEvent) in },
