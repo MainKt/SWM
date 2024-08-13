@@ -221,7 +221,19 @@ let eventHandler = [
     },
     UnmapNotify: { (e: XEvent) in },
     ConfigureNotify: { (e: XEvent) in },
-    ConfigureRequest: { (e: XEvent) in },
+    ConfigureRequest: { (e: XEvent) in
+        let configureRequest = e.xconfigurerequest
+        var windowChanges = XWindowChanges(
+            x: configureRequest.x,
+            y: configureRequest.y,
+            width: configureRequest.width,
+            height: configureRequest.height,
+            border_width: configureRequest.border_width,
+            sibling: configureRequest.above,
+            stack_mode: configureRequest.detail
+        )
+        XConfigureWindow(display, configureRequest.window, UInt32(configureRequest.value_mask), &windowChanges)
+    },
     ClientMessage: { (e: XEvent) in },
     ButtonPress: { (e: XEvent) in },
     PropertyNotify: { (e: XEvent) in },
