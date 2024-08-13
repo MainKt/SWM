@@ -11,6 +11,10 @@ guard let display = XOpenDisplay(nil) else {
     fatalError("Failed to open display")
 }
 
+defer {
+    XCloseDisplay(display)
+}
+
 logger.debug("Successfully opened display")
 
 let defaultConfig = Config(
